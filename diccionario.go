@@ -21,7 +21,7 @@ type Diccionario[K comparable, V any] interface {
 
 	// Iterar itera internamente el diccionario, aplicando la función pasada por parámetro a todos los elementos del
 	// mismo
-	//Iterar(func(clave K, dato V) bool)
+	Iterar(func(clave K, dato V) bool)
 
 	// Iterador devuelve un IterDiccionario para este Diccionario
 	//Iterador() IterDiccionario[K, V]

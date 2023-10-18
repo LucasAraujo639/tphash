@@ -75,6 +75,7 @@ func hashing[K comparable](clave K, capacidad int) int {
 	return funcionHash(clave) % capacidad
 }
 
+// busca la posicion de un elemento basada en una clave dada, devolviendo el índice correspondiente
 func (hash hashCerrado[K, V]) buscar(clave K, capacidad int) int {
 	indice := hashing(clave, capacidad)
 	for hash.tabla[indice].estado != VACIO {
@@ -89,6 +90,7 @@ func (hash hashCerrado[K, V]) buscar(clave K, capacidad int) int {
 	return indice
 }
 
+// reubica todos los datos de mi tabla vieja a una nueva tabla hash redimensionada
 func reubicarDatos[K comparable, V any](hash *hashCerrado[K, V], campo []campo[K, V], capacidad int) {
 	aVisitar := hash.cantidad
 
@@ -103,12 +105,14 @@ func reubicarDatos[K comparable, V any](hash *hashCerrado[K, V], campo []campo[K
 	hash.tam = capacidad
 	hash.borrados = 0
 }
+// funcion auxiliar para la redimension que guarda la clave el valor y el estado en mi nueva tabla hash
 func guardar[K comparable, V any](campo []campo[K, V], clave K, valor V, capacidad int) {
 	indice := buscarRedimension(campo, clave, capacidad)
 	campo[indice].clave = clave
 	campo[indice].valor = valor
 	campo[indice].estado = OCUPADO
 }
+// busca una posicion vacia en donde ubicar la clave en la nueva tabla de hash
 func buscarRedimension[K comparable, V any](campo []campo[K, V], clave K, capacidad int) int {
 	indice := hashing(clave, capacidad)
 	for campo[indice].estado == OCUPADO {
@@ -119,6 +123,8 @@ func buscarRedimension[K comparable, V any](campo []campo[K, V], clave K, capaci
 	}
 	return indice
 }
+
+// crea un nuevo diccionario hash con la capacidad duplicada y reubica los elementos, devuelve un true si se redimensiono
 func redimensionar[K comparable, V any](hash *hashCerrado[K, V]) bool {
 	nuevaCapacidad := hash.tam * 2
 	nuevoCampo := make([]campo[K, V], nuevaCapacidad)
@@ -128,7 +134,7 @@ func redimensionar[K comparable, V any](hash *hashCerrado[K, V]) bool {
 	return true
 }
 
-// // Pertenece determina si una clave ya se encuentra en el diccionario, o no
+// Pertenece determina si una clave ya se encuentra en el diccionario, o no
 func (hash hashCerrado[K, V]) Pertenece(clave K) bool {
 	return hash.tabla[hash.buscar(clave, hash.tam)].estado == OCUPADO
 }
@@ -159,34 +165,31 @@ func (hash *hashCerrado[K, V]) Borrar(clave K) V {
 }
 
 // Cantidad devuelve la cantidad de elementos dentro del diccionario
-func (hash hashCerrado[k, v]) Cantidad() int {
+func (hash hashCerrado[K, V]) Cantidad() int {
 	return hash.cantidad
 }
 
 // Iterar itera internamente el diccionario, aplicando la función pasada por parámetro a todos los elementos del
-// // mismo
-// func (hash hashCerrado[K, V]) Iterar(visitar func(clave K, valor V) bool) {
-// 	pos := 0
-// 	for hash.tabla[pos].estado != OCUPADO {
-// 		pos++
-// 	}
+// mismo
+func (hash hashCerrado[K, V]) Iterar(visitar func(clave K, valor V) bool) {
+	for i := 0; i < hash.tam; i++ {
+		if hash.tabla[i].estado == OCUPADO && !visitar(hash.tabla[i].clave, hash.tabla[i].valor) {
+			break
+		}
+	}
+}
 
-// 	for hash.tabla[pos] != nil &&  visitar(punteroIter.clave, punterIter.valor){
-// 		pos++
-// 	}
-// }
-
-// type iteradorDiccionario [K comparable, V any] struct{
-// 	pos int
-// 	siguiente int
-// 	diccionarioAsociado *hashCerrado[K, V]
-// }
-// 	// Iterador devuelve un IterDiccionario para este Diccionario
-// 	func (iter iterDiccionario[K, V])Iterador() IterDiccionario[K, V] {
-// 	nuevoIter := new(IteradorDiccionario[K, V])
-// 	nuevoIter.pos = buscarPrimeraPosicion(nuevoIter.diccionarioAsociado, 0)
-// 	nuevoIter.siguiente = pos+1
-// 	return nuevoIter
+type iteradorDiccionario [K comparable, V any] struct{
+	pos int
+	siguiente int
+	diccionarioAsociado *hashCerrado[K, V]
+}
+	// Iterador devuelve un IterDiccionario para este Diccionario
+	func (iter iterDiccionario[K, V])Iterador() IterDiccionario[K, V] {
+	nuevoIter := new(IteradorDiccionario[K, V])
+	nuevoIter.pos = buscarPrimeraPosicion(nuevoIter.diccionarioAsociado, 0)
+	nuevoIter.siguiente = pos+1
+	return nuevoIter
 
 // }
 // func avanzarAlSiguienteOcupado(hash hashCerrado[K, V], posActual int) int{
