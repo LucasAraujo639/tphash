@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	_CAPACIDAD_INICIAL  = 64
+	_CAPACIDAD_INICIAL  = 5
 	_FACTOR_CARGA       = 0.7
 	_AUMENTAR_CAPACIDAD = 2
 )
@@ -94,7 +94,7 @@ func reubicarDatos[K comparable, V any](hash *hashCerrado[K, V], campo []campo[K
 
 	for i := 0; aVisitar > 0; i++ {
 		if hash.tabla[i].estado == OCUPADO {
-			hash.Guardar(hash.tabla[i].clave, hash.tabla[i].valor)
+			guardar(campo, hash.tabla[i].clave, hash.tabla[i].valor, capacidad)
 			aVisitar--
 		}
 	}
@@ -103,13 +103,28 @@ func reubicarDatos[K comparable, V any](hash *hashCerrado[K, V], campo []campo[K
 	hash.tam = capacidad
 	hash.borrados = 0
 }
-
+func guardar[K comparable, V any](campo []campo[K, V], clave K, valor V, capacidad int) {
+	indice := buscarRedimension(campo, clave, capacidad)
+	campo[indice].clave = clave
+	campo[indice].valor = valor
+	campo[indice].estado = OCUPADO
+}
+func buscarRedimension[K comparable, V any](campo []campo[K, V], clave K, capacidad int) int {
+	indice := hashing(clave, capacidad)
+	for campo[indice].estado == OCUPADO {
+		indice++
+		if indice >= capacidad {
+			indice -= capacidad
+		}
+	}
+	return indice
+}
 func redimensionar[K comparable, V any](hash *hashCerrado[K, V]) bool {
 	nuevaCapacidad := hash.tam * 2
 	nuevoCampo := make([]campo[K, V], nuevaCapacidad)
-
+	fmt.Println("se redimensiono")
 	reubicarDatos(hash, nuevoCampo, nuevaCapacidad)
-
+	fmt.Println("se redimensiono")
 	return true
 }
 
