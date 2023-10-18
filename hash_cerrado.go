@@ -58,15 +58,16 @@ func (hash *hashCerrado[K, V]) Guardar(clave K, valor V) bool {
 	indice := hash.buscar(clave, hash.tam)
 	if hash.tabla[indice].estado == OCUPADO {
 		hash.tabla[indice].valor = valor
-		return true
+		return false
 	}
 	hash.tabla[indice].clave = clave
 	hash.tabla[indice].valor = valor
 	hash.tabla[indice].estado = OCUPADO
 	hash.tam++
+	hash.cantidad++
 
 	if int(hash.borrados+hash.cantidad) >= (hash.tam / 2) {
-		redimensionar(&hash)
+		redimensionar(hash)
 	}
 	return true
 }
@@ -113,51 +114,35 @@ func redimensionar[K comparable, V any](hash *hashCerrado[K, V]) bool {
 }
 
 // // Pertenece determina si una clave ya se encuentra en el diccionario, o no
-// func (hash hashCerrado[K,V]) Pertenece(clave K) bool {
-// 	pos := funcionHash(clave, hash.tam)
-// 	for hash.tabla.[pos].estado != VACIO{
-// 		if hash.tabla.[pos].estado == clave{
-// 			return true
-// 		}
-// 		pos++
-// 	}
-// 	return false
-// }
+func (hash hashCerrado[K, V]) Pertenece(clave K) bool {
+	return hash.tabla[hash.buscar(clave, hash.tam)].estado == OCUPADO
+}
 
-// // Obtener devuelve el dato asociado a una clave. Si la clave no pertenece, debe entrar en pánico con mensaje
-// // 'La clave no pertenece al diccionario'
-// func (hash hashCerrado[K,V]) Obtener(clave K) V {
-// 	pos := funcionHash(clave, hash.tam)
-// 	for hash.tabla[pos].estado != VACIO{
-// 		if hash.tabla[pos].clave == clave{
-// 			return hash.tabla.valor
-// 		}
-// 		pos++
-// 	}
-// 	return panic("la clave no pertenece al diccionario")
-//  }
+// Obtener devuelve el dato asociado a una clave. Si la clave no pertenece, debe entrar en pánico con mensaje
+// 'La clave no pertenece al diccionario'
+func (hash hashCerrado[K, V]) Obtener(clave K) { //V
+	// pos := funcionHash(clave, hash.tam)
+	// for hash.tabla[pos].estado != VACIO{
+	// 	if hash.tabla[pos].clave == clave{
+	// 		return hash.tabla.valor
+	// 	}
+	// 	pos++
+	// }
+	// return panic("la clave no pertenece al diccionario")
+
+}
 
 // // Borrar borra del Diccionario la clave indicada, devolviendo el dato que se encontraba asociado. Si la clave no
 // // pertenece al diccionario, debe entrar en pánico con un mensaje 'La clave no pertenece al diccionario'
-// func (hash *hashCerrado[K, V]) Borrar(clave string) string {
-// 	if Pertenece(){
-// 		pos := funcionHash(clave, hash.tam)
-// 		for hash.tabla[pos].estado != VACIO{
-// 			if hash.tabla[pos].clave == clave{
-// 				hash.tabla[pos].estado == BORRADO
-// 			}
-// 			pos++
-// 		}
+func (hash *hashCerrado[K, V]) Borrar(clave string) string {
 
-// 	}else{
-// 		return panic("la clave no pertenece al diccionario")
-// 	}
-// }
+	return "a"
+}
 
-// // Cantidad devuelve la cantidad de elementos dentro del diccionario
-// func (hash hashCerrado[k, v]) Cantidad() int {
-// 	return hash.cantidad
-// }
+// Cantidad devuelve la cantidad de elementos dentro del diccionario
+func (hash hashCerrado[k, v]) Cantidad() int {
+	return hash.cantidad
+}
 
 // Iterar itera internamente el diccionario, aplicando la función pasada por parámetro a todos los elementos del
 // // mismo
