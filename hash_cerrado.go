@@ -122,7 +122,7 @@ func buscarRedimension[K comparable, V any](campo []campo[K, V], clave K, capaci
 func redimensionar[K comparable, V any](hash *hashCerrado[K, V]) bool {
 	nuevaCapacidad := hash.tam * 2
 	nuevoCampo := make([]campo[K, V], nuevaCapacidad)
-	fmt.Println("se redimensiono")
+
 	reubicarDatos(hash, nuevoCampo, nuevaCapacidad)
 	fmt.Println("se redimensiono")
 	return true
@@ -135,16 +135,13 @@ func (hash hashCerrado[K, V]) Pertenece(clave K) bool {
 
 // Obtener devuelve el dato asociado a una clave. Si la clave no pertenece, debe entrar en pánico con mensaje
 // 'La clave no pertenece al diccionario'
-func (hash hashCerrado[K, V]) Obtener(clave K) { //V
-	// pos := funcionHash(clave, hash.tam)
-	// for hash.tabla[pos].estado != VACIO{
-	// 	if hash.tabla[pos].clave == clave{
-	// 		return hash.tabla.valor
-	// 	}
-	// 	pos++
-	// }
-	// return panic("la clave no pertenece al diccionario")
-
+func (hash hashCerrado[K, V]) Obtener(clave K) V { //V
+	indice := hash.buscar(clave, hash.tam)
+	if hash.tabla[indice].estado == OCUPADO {
+		return hash.tabla[indice].valor
+	}
+	var valorPorDefecto V
+	return valorPorDefecto
 }
 
 // // Borrar borra del Diccionario la clave indicada, devolviendo el dato que se encontraba asociado. Si la clave no

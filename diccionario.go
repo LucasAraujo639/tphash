@@ -10,7 +10,7 @@ type Diccionario[K comparable, V any] interface {
 
 	// Obtener devuelve el dato asociado a una clave. Si la clave no pertenece, debe entrar en pánico con mensaje
 	// 'La clave no pertenece al diccionario'
-	//Obtener(clave K) V
+	Obtener(clave K) V
 
 	// Borrar borra del Diccionario la clave indicada, devolviendo el dato que se encontraba asociado. Si la clave no
 	// pertenece al diccionario, debe entrar en pánico con un mensaje 'La clave no pertenece al diccionario'
