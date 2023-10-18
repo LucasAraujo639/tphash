@@ -14,7 +14,7 @@ type Diccionario[K comparable, V any] interface {
 
 	// Borrar borra del Diccionario la clave indicada, devolviendo el dato que se encontraba asociado. Si la clave no
 	// pertenece al diccionario, debe entrar en pánico con un mensaje 'La clave no pertenece al diccionario'
-	//Borrar(clave K) V
+	Borrar(clave K) V
 
 	// Cantidad devuelve la cantidad de elementos dentro del diccionario
 	Cantidad() int

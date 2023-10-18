@@ -140,15 +140,22 @@ func (hash hashCerrado[K, V]) Obtener(clave K) V { //V
 	if hash.tabla[indice].estado == OCUPADO {
 		return hash.tabla[indice].valor
 	}
-	var valorPorDefecto V
-	return valorPorDefecto
+	panic("la clave no pertenece al diccionario")
 }
 
 // // Borrar borra del Diccionario la clave indicada, devolviendo el dato que se encontraba asociado. Si la clave no
 // // pertenece al diccionario, debe entrar en pánico con un mensaje 'La clave no pertenece al diccionario'
-func (hash *hashCerrado[K, V]) Borrar(clave string) string {
+func (hash *hashCerrado[K, V]) Borrar(clave K) V {
 
-	return "a"
+	indice := hash.buscar(clave, hash.tam)
+	if hash.tabla[indice].estado != OCUPADO {
+		panic("La clave no pertenece al diccionario")
+	}
+	hash.tabla[indice].estado = BORRADO
+	hash.cantidad--
+	hash.borrados++
+	return hash.tabla[indice].valor
+
 }
 
 // Cantidad devuelve la cantidad de elementos dentro del diccionario
