@@ -53,6 +53,9 @@ func funcionHash[K comparable](clave K) int {
 	}
 	return int(math.Abs(float64(p)))
 }
+func hashing[K comparable](clave K, capacidad int) int {
+	return funcionHash(clave) % capacidad
+}
 
 // Guardar guarda el par clave-dato en el Diccionario. Si la clave ya se encontraba, se actualiza el dato asociado
 func (hash *hashCerrado[K, V]) Guardar(clave K, valor V) bool {
@@ -72,12 +75,9 @@ func (hash *hashCerrado[K, V]) Guardar(clave K, valor V) bool {
 	}
 	return true
 }
-func hashing[K comparable](clave K, capacidad int) int {
-	return funcionHash(clave) % capacidad
-}
 
 // busca la posicion de un elemento basada en una clave dada, devolviendo el índice correspondiente
-func (hash hashCerrado[K, V]) buscar(clave K, capacidad int) int {
+func (hash *hashCerrado[K, V]) buscar(clave K, capacidad int) int {
 	indice := hashing(clave, capacidad)
 	for hash.tabla[indice].estado != VACIO {
 		if (hash.tabla[indice].estado == OCUPADO) && (hash.tabla[indice].clave == clave) {
@@ -142,13 +142,13 @@ func redimensionar[K comparable, V any](hash *hashCerrado[K, V]) bool {
 }
 
 // Pertenece determina si una clave ya se encuentra en el diccionario, o no
-func (hash hashCerrado[K, V]) Pertenece(clave K) bool {
+func (hash *hashCerrado[K, V]) Pertenece(clave K) bool {
 	return hash.tabla[hash.buscar(clave, hash.tam)].estado == OCUPADO
 }
 
 // Obtener devuelve el dato asociado a una clave. Si la clave no pertenece, debe entrar en pánico con mensaje
 // 'La clave no pertenece al diccionario'
-func (hash hashCerrado[K, V]) Obtener(clave K) V { //V
+func (hash *hashCerrado[K, V]) Obtener(clave K) V { //V
 	indice := hash.buscar(clave, hash.tam)
 	if hash.tabla[indice].estado == OCUPADO {
 		return hash.tabla[indice].valor
@@ -172,13 +172,13 @@ func (hash *hashCerrado[K, V]) Borrar(clave K) V {
 }
 
 // Cantidad devuelve la cantidad de elementos dentro del diccionario
-func (hash hashCerrado[K, V]) Cantidad() int {
+func (hash *hashCerrado[K, V]) Cantidad() int {
 	return hash.cantidad
 }
 
 // Iterar itera internamente el diccionario, aplicando la función pasada por parámetro a todos los elementos del
 // mismo
-func (hash hashCerrado[K, V]) Iterar(visitar func(clave K, valor V) bool) {
+func (hash *hashCerrado[K, V]) Iterar(visitar func(clave K, valor V) bool) {
 	for i := 0; i < hash.tam; i++ {
 		if hash.tabla[i].estado == OCUPADO && !visitar(hash.tabla[i].clave, hash.tabla[i].valor) {
 			break
@@ -216,13 +216,14 @@ func (iter iteradorDiccionario[K, V]) HaySiguiente() bool {
 	return iter.pos != iter.hashAsociado.tam
 }
 
-// 	// VerActual devuelve la clave y el dato del elemento actual en el que se encuentra posicionado el iterador.
-// 	// Si no HaySiguiente, debe entrar en pánico con el mensaje 'El iterador termino de iterar'
-// 	func (iter iterDiccionario[K,V]) VerActual() (K, V){
-// 		if !iter.HaySiguiente(){
-// 			panic("el iterador termino de iterar")
-// 		return iter.hashCerrado.tabla[iter.pos].clave, iter.hashCerrado.tabla[iter.pos].valor
-// 	}
+// VerActual devuelve la clave y el dato del elemento actual en el que se encuentra posicionado el iterador.
+// Si no HaySiguiente, debe entrar en pánico con el mensaje 'El iterador termino de iterar'
+func (iter iteradorDiccionario[K, V]) VerActual() (K, V) {
+	if !iter.HaySiguiente() {
+		panic("el iterador termino de iterar")
+	}
+	return iter.hashAsociado.tabla[iter.pos].clave, iter.hashAsociado.tabla[iter.pos].valor
+}
 
 // Siguiente si HaySiguiente avanza al siguiente elemento en el diccionario. Si no HaySiguiente, entonces debe
 // entrar en pánico con mensaje 'El iterador termino de iterar'

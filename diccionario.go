@@ -33,9 +33,9 @@ type IterDiccionario[K comparable, V any] interface {
 	// el iterador hay un elemento.
 	HaySiguiente() bool
 
-	// // VerActual devuelve la clave y el dato del elemento actual en el que se encuentra posicionado el iterador.
-	// // Si no HaySiguiente, debe entrar en pánico con el mensaje 'El iterador termino de iterar'
-	// VerActual() (K, V)
+	// VerActual devuelve la clave y el dato del elemento actual en el que se encuentra posicionado el iterador.
+	// Si no HaySiguiente, debe entrar en pánico con el mensaje 'El iterador termino de iterar'
+	VerActual() (K, V)
 
 	// Siguiente si HaySiguiente avanza al siguiente elemento en el diccionario. Si no HaySiguiente, entonces debe
 	// entrar en pánico con mensaje 'El iterador termino de iterar'
