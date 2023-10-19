@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	_CAPACIDAD_INICIAL  = 5
+	_CAPACIDAD_INICIAL  = 10
 	_FACTOR_CARGA       = 0.7
 	_AUMENTAR_CAPACIDAD = 2
+	_INICIO             = 0
 )
 
 type Estado int
@@ -56,6 +57,7 @@ func funcionHash[K comparable](clave K) int {
 // Guardar guarda el par clave-dato en el Diccionario. Si la clave ya se encontraba, se actualiza el dato asociado
 func (hash *hashCerrado[K, V]) Guardar(clave K, valor V) bool {
 	indice := hash.buscar(clave, hash.tam)
+	fmt.Println("i", indice)
 	if hash.tabla[indice].estado == OCUPADO {
 		hash.tabla[indice].valor = valor
 		return false
@@ -63,7 +65,6 @@ func (hash *hashCerrado[K, V]) Guardar(clave K, valor V) bool {
 	hash.tabla[indice].clave = clave
 	hash.tabla[indice].valor = valor
 	hash.tabla[indice].estado = OCUPADO
-	hash.tam++
 	hash.cantidad++
 
 	if int(hash.borrados+hash.cantidad) >= (hash.tam / 2) {
@@ -82,11 +83,14 @@ func (hash hashCerrado[K, V]) buscar(clave K, capacidad int) int {
 		if (hash.tabla[indice].estado == OCUPADO) && (hash.tabla[indice].clave == clave) {
 			break
 		}
+
 		indice++
+
 		if indice >= capacidad {
 			indice -= capacidad
 		}
 	}
+
 	return indice
 }
 
@@ -105,6 +109,7 @@ func reubicarDatos[K comparable, V any](hash *hashCerrado[K, V], campo []campo[K
 	hash.tam = capacidad
 	hash.borrados = 0
 }
+
 // funcion auxiliar para la redimension que guarda la clave el valor y el estado en mi nueva tabla hash
 func guardar[K comparable, V any](campo []campo[K, V], clave K, valor V, capacidad int) {
 	indice := buscarRedimension(campo, clave, capacidad)
@@ -112,6 +117,7 @@ func guardar[K comparable, V any](campo []campo[K, V], clave K, valor V, capacid
 	campo[indice].valor = valor
 	campo[indice].estado = OCUPADO
 }
+
 // busca una posicion vacia en donde ubicar la clave en la nueva tabla de hash
 func buscarRedimension[K comparable, V any](campo []campo[K, V], clave K, capacidad int) int {
 	indice := hashing(clave, capacidad)
@@ -131,6 +137,7 @@ func redimensionar[K comparable, V any](hash *hashCerrado[K, V]) bool {
 
 	reubicarDatos(hash, nuevoCampo, nuevaCapacidad)
 	fmt.Println("se redimensiono")
+	fmt.Println("tamaño nuevo", hash.tam)
 	return true
 }
 
@@ -179,32 +186,35 @@ func (hash hashCerrado[K, V]) Iterar(visitar func(clave K, valor V) bool) {
 	}
 }
 
-type iteradorDiccionario [K comparable, V any] struct{
-	pos int
-	siguiente int
-	diccionarioAsociado *hashCerrado[K, V]
+type iteradorDiccionario[K comparable, V any] struct {
+	pos          int
+	hashAsociado *hashCerrado[K, V]
 }
-	// Iterador devuelve un IterDiccionario para este Diccionario
-	func (iter iterDiccionario[K, V])Iterador() IterDiccionario[K, V] {
-	nuevoIter := new(IteradorDiccionario[K, V])
-	nuevoIter.pos = buscarPrimeraPosicion(nuevoIter.diccionarioAsociado, 0)
-	nuevoIter.siguiente = pos+1
+
+// Iterador devuelve un IterDiccionario para este Diccionario
+func (hash *hashCerrado[K, V]) Iterador() IterDiccionario[K, V] {
+	nuevoIter := new(iteradorDiccionario[K, V])
+	nuevoIter.hashAsociado = hash
+	nuevoIter.pos = buscarIndiceProximaPosicion(*nuevoIter)
+	fmt.Println("creo hash posicion en la encuentra", nuevoIter.pos)
 	return nuevoIter
 
-// }
-// func avanzarAlSiguienteOcupado(hash hashCerrado[K, V], posActual int) int{
+}
+func buscarIndiceProximaPosicion[K comparable, V any](iter iteradorDiccionario[K, V]) int {
+	fmt.Println("buscar pos", iter.hashAsociado.tam)
+	for i := iter.pos; i < iter.hashAsociado.tam; i++ {
+		if iter.hashAsociado.tabla[i].estado == OCUPADO {
+			return i
+		}
+	}
+	return iter.hashAsociado.tam
+}
 
-// 	for hash.tabla[posActual].estado != OCUPADO {
-// 		posActual++
-// 	}
-// 	return posActual
-// }
-
-// 	// HaySiguiente devuelve si hay más datos para ver. Esto es, si en el lugar donde se encuentra parado
-// 	// el iterador hay un elemento.
-// func  (iter iterDiccionario[K, V])()HaySiguiente() bool {
-// 	return iter.pos != iter.hashCerrado.tam
-// }
+// HaySiguiente devuelve si hay más datos para ver. Esto es, si en el lugar donde se encuentra parado
+// el iterador hay un elemento.
+func (iter iteradorDiccionario[K, V]) HaySiguiente() bool {
+	return iter.pos != iter.hashAsociado.tam
+}
 
 // 	// VerActual devuelve la clave y el dato del elemento actual en el que se encuentra posicionado el iterador.
 // 	// Si no HaySiguiente, debe entrar en pánico con el mensaje 'El iterador termino de iterar'
@@ -214,15 +224,14 @@ type iteradorDiccionario [K comparable, V any] struct{
 // 		return iter.hashCerrado.tabla[iter.pos].clave, iter.hashCerrado.tabla[iter.pos].valor
 // 	}
 
-// 	// Siguiente si HaySiguiente avanza al siguiente elemento en el diccionario. Si no HaySiguiente, entonces debe
-// 	// entrar en pánico con mensaje 'El iterador termino de iterar'
-// 	func (iter iterDiccionario[K,V]) Siguiente(){
-// 		iter.pos++
-// 		if !iter.HaySiguiente(){
-// 			panic("el iterador termino de iterar")
-// 			}
-// 			for iter.hashCerrado.tabla[iter.pos].estado != OCUPADO {
-// 			posActual++
-// 		}
+// Siguiente si HaySiguiente avanza al siguiente elemento en el diccionario. Si no HaySiguiente, entonces debe
+// entrar en pánico con mensaje 'El iterador termino de iterar'
+func (iter *iteradorDiccionario[K, V]) Siguiente() {
+	if !iter.HaySiguiente() {
+		panic("El iterador termino de iterar")
+	}
+	iter.pos++
+	iter.pos = buscarIndiceProximaPosicion(*iter)
+	fmt.Println("posicion siguiente", iter.pos)
 
-// 	}
+}
