@@ -131,7 +131,7 @@ func buscar_VACIO[K comparable, V any](campo []campo[K, V], clave K, capacidad i
 // crea un nuevo diccionario hash con la capacidad duplicada y reubica los elementos, devuelve un true si se redimensiono
 func (hash *hashCerrado[K, V]) redimensionar() {
 	nuevaCapacidad := hash.tam * _AUMENTAR_CAPACIDAD
-	nuevoCampo := make([]campo[K, V], nuevaCapacidad)
+	nuevoCampo := crearTabla[K, V](nuevaCapacidad)
 	hash.reubicarDatos(nuevoCampo, nuevaCapacidad)
 }
 
