@@ -11,9 +11,11 @@ const (
 	_VACIO estado = iota
 	_OCUPADO
 	_BORRADO
-	_CAPACIDAD_INICIAL  = 21
-	_AUMENTAR_CAPACIDAD = 2
-	_INICIO             = 0
+	_CAPACIDAD_INICIAL     = 21
+	_AUMENTAR_CAPACIDAD    = 2.0
+	_FACTOR_CARGA_DIMINUIR = 0.15
+	_DISMINUIR_CAPACIDAD   = 0.5
+	_INICIO                = 0
 )
 
 type campo[K comparable, V any] struct {
@@ -44,11 +46,11 @@ func convertirABytes[K comparable](clave K) []byte {
 
 func funcionHash[K comparable](clave K) int {
 	claveBytes := convertirABytes(clave)
-	p := 0
+	h := 0
 	for i := 0; i < len(claveBytes); i++ {
-		p = p*31 + int(claveBytes[i])
+		h = h*31 + int(claveBytes[i])
 	}
-	return int(math.Abs(float64(p)))
+	return int(math.Abs(float64(h)))
 }
 func hashear[K comparable](clave K, capacidad int) int {
 	return funcionHash(clave) % capacidad
@@ -67,7 +69,7 @@ func (hash *hashCerrado[K, V]) Guardar(clave K, valor V) {
 	hash.cantidad++
 
 	if int(hash.borrados+hash.cantidad) >= (hash.tam / 2) {
-		hash.redimensionar()
+		hash.redimensionar(_AUMENTAR_CAPACIDAD)
 	}
 }
 
@@ -89,52 +91,6 @@ func (hash *hashCerrado[K, V]) buscarPos(clave K, capacidad int) int {
 	return pos
 }
 
-// reubica todos los datos de mi tabla vieja a una nueva tabla hash redimensionada
-func (hash *hashCerrado[K, V]) reubicarDatos(campo []campo[K, V], capacidad int) {
-	aVisitar := hash.cantidad
-	i := _INICIO
-
-	for aVisitar > _INICIO {
-		if hash.tabla[i].estado == _OCUPADO {
-			guardar(campo, hash.tabla[i].clave, hash.tabla[i].valor, capacidad)
-			aVisitar--
-		}
-		i++
-	}
-
-	hash.tabla = campo
-	hash.borrados = 0
-	hash.tam = capacidad
-
-}
-
-// funcion auxiliar para la redimension que guarda la clave el valor y el estado en mi nueva tabla hash
-func guardar[K comparable, V any](campo []campo[K, V], clave K, valor V, capacidad int) {
-	pos := buscar_VACIO(campo, clave, capacidad)
-	campo[pos].clave = clave
-	campo[pos].valor = valor
-	campo[pos].estado = _OCUPADO
-}
-
-// busca una posicion vacia en donde ubicar la clave en la nueva tabla de hash
-func buscar_VACIO[K comparable, V any](campo []campo[K, V], clave K, capacidad int) int {
-	pos := hashear(clave, capacidad)
-	for campo[pos].estado == _OCUPADO {
-		pos++
-		if pos >= capacidad {
-			pos -= capacidad
-		}
-	}
-	return pos
-}
-
-// crea un nuevo diccionario hash con la capacidad duplicada y reubica los elementos, devuelve un true si se redimensiono
-func (hash *hashCerrado[K, V]) redimensionar() {
-	nuevaCapacidad := hash.tam * _AUMENTAR_CAPACIDAD
-	nuevoCampo := crearTabla[K, V](nuevaCapacidad)
-	hash.reubicarDatos(nuevoCampo, nuevaCapacidad)
-}
-
 // Pertenece determina si una clave ya se encuentra en el diccionario, o no
 func (hash *hashCerrado[K, V]) Pertenece(clave K) bool {
 	return hash.tabla[hash.buscarPos(clave, hash.tam)].estado == _OCUPADO
@@ -154,6 +110,9 @@ func (hash *hashCerrado[K, V]) Obtener(clave K) V { //V
 // // pertenece al diccionario, debe entrar en pánico con un mensaje 'La clave no pertenece al diccionario'
 func (hash *hashCerrado[K, V]) Borrar(clave K) V {
 
+	if float32(hash.borrados+hash.cantidad)/float32(hash.tam) <= _FACTOR_CARGA_DIMINUIR {
+		hash.redimensionar(_DISMINUIR_CAPACIDAD)
+	}
 	pos := hash.buscarPos(clave, hash.tam)
 	if hash.tabla[pos].estado != _OCUPADO {
 		panic("La clave no pertenece al diccionario")
@@ -161,8 +120,55 @@ func (hash *hashCerrado[K, V]) Borrar(clave K) V {
 	hash.tabla[pos].estado = _BORRADO
 	hash.cantidad--
 	hash.borrados++
-	return hash.tabla[pos].valor
 
+	return hash.tabla[pos].valor
+}
+
+// crea un nuevo diccionario hash con la capacidad duplicada y reubica los elementos, devuelve un true si se redimensiono
+func (hash *hashCerrado[K, V]) redimensionar(cap float64) {
+	nuevaCapacidad := int(float64(hash.tam) * cap)
+	nuevoCampo := crearTabla[K, V](nuevaCapacidad)
+	hash.reubicarDatos(nuevoCampo, nuevaCapacidad)
+}
+
+// reubica todos los datos de mi tabla vieja a una nueva tabla hash redimensionada
+func (hash *hashCerrado[K, V]) reubicarDatos(campo []campo[K, V], capacidad int) {
+	aReubicar := hash.cantidad
+	i := _INICIO
+
+	for aReubicar > _INICIO {
+		if hash.tabla[i].estado == _OCUPADO {
+			guardar(campo, hash.tabla[i].clave, hash.tabla[i].valor, capacidad)
+			aReubicar--
+		}
+		i++
+	}
+
+	hash.tabla = campo
+	hash.borrados = 0
+	hash.tam = capacidad
+
+}
+
+// funcion auxiliar para la redimension que guarda la clave el valor y el estado en mi nueva tabla hash
+func guardar[K comparable, V any](campo []campo[K, V], clave K, valor V, capacidad int) {
+	pos := buscarVacio(campo, clave, capacidad)
+	campo[pos].clave = clave
+	campo[pos].valor = valor
+	campo[pos].estado = _OCUPADO
+}
+
+// busca una posicion vacia en donde ubicar la clave en la nueva tabla de hash
+func buscarVacio[K comparable, V any](campo []campo[K, V], clave K, capacidad int) int {
+	pos := hashear(clave, capacidad)
+	for campo[pos].estado == _OCUPADO {
+		pos++
+
+		if pos >= capacidad {
+			pos -= capacidad
+		}
+	}
+	return pos
 }
 
 // Cantidad devuelve la cantidad de elementos dentro del diccionario
